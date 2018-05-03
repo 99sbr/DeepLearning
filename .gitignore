@@ -6,6 +6,7 @@
 *.gz
 *.xml
 *.DS_Store
+*.iml
 
 /config
 /core.excludesFile
