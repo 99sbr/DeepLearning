@@ -7,6 +7,10 @@
 *.xml
 *.DS_Store
 
+/config
+/core.excludesFile
+/gitRSA
+/gitRSA.pub
 
 
 ModelCheckpoints/
@@ -14,7 +18,3 @@ Preprocessing/
 Submission/
 DL3 Dataset/
 
-config
-core.excludesFile
-gitRSA
-gitRSA.pub
