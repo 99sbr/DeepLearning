@@ -13,3 +13,8 @@ ModelCheckpoints/
 Preprocessing/
 Submission/
 DL3 Dataset/
+
+config
+core.excludesFile
+gitRSA
+gitRSA.pub
