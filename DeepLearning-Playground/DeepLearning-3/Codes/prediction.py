@@ -19,7 +19,7 @@ test_img_name = list(test_data['img_name'].values)
 
 l = []
 for img_name in tqdm(submission.Image_name.values):
-    pred = model.predict(test_array[test_img_name.index(img_name)].reshape(1, 250, 250, 3))
+    pred = model.predict(test_array[test_img_name.index(img_name)].reshape(1, 300,300, 3))
     pred[pred >= 0.5] = 1
     pred[pred < 0.5] = 0
     pred = (pred[0]).tolist()

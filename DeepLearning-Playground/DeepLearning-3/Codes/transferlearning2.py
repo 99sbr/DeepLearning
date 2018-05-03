@@ -1,13 +1,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import warnings
+
 warnings.filterwarnings('ignore')
 import matplotlib.pyplot as plt
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.models import Model
-from keras.layers import Dropout, Flatten, Dense ,Concatenate , BatchNormalization,Activation
+from keras.layers import Dropout, Flatten, Dense, Concatenate, BatchNormalization, Activation ,GlobalAveragePooling2D
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 import pandas as pd
 import numpy as np
@@ -17,34 +18,47 @@ import gc
 #
 
 weightsOutputFile = '../ModelCheckpoints/InceptionV2.{epoch:02d}-{val_acc:.3f}.hdf5'
-IM_WIDTH, IM_HEIGHT = 300 , 300
-EPOCH = 40
+IM_WIDTH, IM_HEIGHT = 300, 300
+EPOCH = 25
 BATCH_SIZE = 32
-NB_LAYERS_TO_FREEZE = 10
-
+NB_IV3_LAYERS_TO_FREEZE = 172
 
 
 def add_callback():
-    #tensor_board=TensorBoard(log_dir='../Graph', histogram_freq=0,batch_size=32, write_graph=True, write_images=True)
+    # tensor_board=TensorBoard(log_dir='../Graph', histogram_freq=0,batch_size=32, write_graph=True, write_images=True)
     learning_rate_reduction = ReduceLROnPlateau(monitor='val_acc', patience=5, verbose=1, factor=0.5, min_lr=0.00001)
     checkpoint = ModelCheckpoint(weightsOutputFile, monitor='val_acc', verbose=1, save_best_only=True,
                                  save_weights_only=False,
                                  mode='auto', period=1)
-    #early = EarlyStopping(monitor='val_acc', min_delta=0, patience=10, verbose=1, mode='auto')
-    return [checkpoint,learning_rate_reduction]
+    # early = EarlyStopping(monitor='val_acc', min_delta=0, patience=10, verbose=1, mode='auto')
+    return [checkpoint, learning_rate_reduction]
 
 
-def fine_tune(model):
 
-    for layer in model.layers[:-NB_LAYERS_TO_FREEZE]:
-        layer.trainable = False
-    model.compile(loss='binary_crossentropy', optimizer=optimizers.Adam(lr=1e-4), metrics=['accuracy'])
-    return model
+def setup_to_transfer_learn(model, base_model):
+  """Freeze all layers and compile the model"""
+  for layer in base_model.layers:
+    layer.trainable = False
+    model.compile(loss='binary_crossentropy', optimizer=optimizers.Adam(), metrics=['accuracy'])
+
+
+
+
+def setup_to_finetune(model):
+  """Freeze the bottom NB_IV3_LAYERS and retrain the remaining top layers.
+  note: NB_IV3_LAYERS corresponds to the top 2 inception blocks in the inceptionv3 arch
+  Args:
+    model: keras model
+  """
+  for layer in model.layers[:NB_IV3_LAYERS_TO_FREEZE]:
+     layer.trainable = False
+  for layer in model.layers[NB_IV3_LAYERS_TO_FREEZE:]:
+     layer.trainable = True
+  model.compile(loss='binary_crossentropy', optimizer=optimizers.Adam(lr=1e-4), metrics=['accuracy'])
 
 def add_new_last_layer(base_model, nb_classes):
-
     x = base_model.output
-    x = Flatten()(x)
+    x = GlobalAveragePooling2D()(x)
     x = Dense(1024)(x)
     x = BatchNormalization()(x)
     x = Activation('selu')(x)
@@ -54,7 +68,7 @@ def add_new_last_layer(base_model, nb_classes):
     x = Activation('selu')(x)
 
     y = base_model.output
-    y = Flatten()(y)
+    y = GlobalAveragePooling2D()(y)
     y = Dense(1024)(y)
     y = BatchNormalization()(y)
     y = Activation('relu')(y)
@@ -63,8 +77,7 @@ def add_new_last_layer(base_model, nb_classes):
     y = BatchNormalization()(y)
     y = Activation('relu')(y)
 
-
-    z = Concatenate([x,y])
+    z = Concatenate([x, y])
     # using sigmoid for multi-label classification
     predictions = Dense(nb_classes, activation='sigmoid')(x)
     # Creating final model
@@ -72,36 +85,35 @@ def add_new_last_layer(base_model, nb_classes):
     return model
 
 
-
 def plot_training(history):
-  acc = history.history['acc']
-  val_acc = history.history['val_acc']
-  loss = history.history['loss']
-  val_loss = history.history['val_loss']
-  epochs = range(len(acc))
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs = range(len(acc))
 
-  plt.figure(1)
-  plt.plot(acc)
-  plt.plot(val_acc)
-  plt.title('model accuracy')
-  plt.ylabel('accuracy')
-  plt.xlabel('epoch')
-  plt.legend(['train', 'val'], loc='upper left')
-  plt.show()
+    plt.figure(1)
+    plt.plot(acc)
+    plt.plot(val_acc)
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
 
-  # summarize history for loss
-  plt.figure(2)
-  plt.plot(loss)
-  plt.plot(val_loss)
-  plt.title('model loss')
-  plt.ylabel('loss')
-  plt.xlabel('epoch')
-  plt.legend(['train', 'val'], loc='upper left')
-  plt.show()
+    # summarize history for loss
+    plt.figure(2)
+    plt.plot(loss)
+    plt.plot(val_loss)
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
+
 
 def build_model(X_train, X_val, y_train, y_val):
 
-    base_model = applications.InceptionResNetV2(weights="imagenet", include_top=False, input_shape=(IM_WIDTH, IM_HEIGHT, 3))
     # Data Augmentation
 
     train_datagen = ImageDataGenerator(
@@ -131,13 +143,28 @@ def build_model(X_train, X_val, y_train, y_val):
     validation_generator = test_datagen.flow(
         X_val, y_val
     )
-    model = add_new_last_layer(base_model, y_train.shape[1])
 
+
+
+    base_model = applications.InceptionV3(weights="imagenet", include_top=False,
+                                          input_shape=(IM_WIDTH, IM_HEIGHT, 3))
+
+    model = add_new_last_layer(base_model, y_train.shape[1])
     # transfer learning
-    model=fine_tune(model)
-    
+    setup_to_transfer_learn(model, base_model)
     # Train model
-    history = model.fit_generator(
+    history1 = model.fit_generator(
+        train_generator,
+        steps_per_epoch=nb_train_samples / BATCH_SIZE,
+        epochs=EPOCH,
+        shuffle=True,
+        validation_data=validation_generator,
+        validation_steps=nb_validation_samples / BATCH_SIZE,
+        callbacks=add_callback()
+    )
+    # fine-tuning
+    setup_to_finetune(model)
+    history2 = model.fit_generator(
         train_generator,
         steps_per_epoch=nb_train_samples / BATCH_SIZE,
         epochs=EPOCH,
@@ -147,12 +174,9 @@ def build_model(X_train, X_val, y_train, y_val):
         callbacks=add_callback()
     )
 
-    #plot_training(history)
-
 
 
 if __name__ == '__main__':
-
     train_data = pd.read_csv('../PreProcessing/train_data.csv')
     test_data = pd.read_csv('../PreProcessing/test_data.csv')
 

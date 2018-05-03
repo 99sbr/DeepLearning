@@ -5,13 +5,13 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd
 
-img_x = 250
-img_y = 250
+img_x = 300
+img_y = 300
 
 train_images = glob(os.path.join("../DL3 Dataset/train_img", "*.jpg"))
 test_images = glob(os.path.join("../DL3 Dataset/test_img", "*.jpg"))
-print('¡¡ Length of train Set ¡¡', len(train_images))
-print('¡¡ Length of test Set ¡¡', len(test_images))
+print('Length of train Set', len(train_images))
+print('Length of test Set', len(test_images))
 
 # Resize
 train_x = []
