@@ -1,0 +1,15 @@
+*.csv
+*.jpg
+*.h5
+*.npz
+*.hdf5
+*.gz
+*.xml
+*.DS_Store
+
+
+
+ModelCheckpoints/
+Preprocessing/
+Submission/
+DL3 Dataset/
