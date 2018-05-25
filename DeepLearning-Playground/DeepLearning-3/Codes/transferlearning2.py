@@ -1,9 +1,9 @@
+'fine tune'
 from __future__ import print_function
 from __future__ import absolute_import
 import warnings
 
 warnings.filterwarnings('ignore')
-import matplotlib.pyplot as plt
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
@@ -17,9 +17,9 @@ import gc
 
 #
 
-weightsOutputFile = '../ModelCheckpoints/InceptionV2.{epoch:02d}-{val_acc:.3f}.hdf5'
-IM_WIDTH, IM_HEIGHT = 300, 300
-EPOCH = 25
+weightsOutputFile = '../ModelCheckpoints/InceptionV3.{epoch:02d}-{val_acc:.3f}.hdf5'
+IM_WIDTH, IM_HEIGHT = 250,250
+EPOCH = 1
 BATCH_SIZE = 32
 NB_IV3_LAYERS_TO_FREEZE = 172
 
@@ -59,57 +59,12 @@ def setup_to_finetune(model):
 def add_new_last_layer(base_model, nb_classes):
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
-    x = Dense(1024)(x)
-    x = BatchNormalization()(x)
-    x = Activation('selu')(x)
-    x = Dropout(0.2)(x)
-    x = Dense(512)(x)
-    x = BatchNormalization()(x)
-    x = Activation('selu')(x)
-
-    y = base_model.output
-    y = GlobalAveragePooling2D()(y)
-    y = Dense(1024)(y)
-    y = BatchNormalization()(y)
-    y = Activation('relu')(y)
-    y = Dropout(0.2)(y)
-    y = Dense(512)(y)
-    y = BatchNormalization()(y)
-    y = Activation('relu')(y)
-
-    z = Concatenate([x, y])
     # using sigmoid for multi-label classification
     predictions = Dense(nb_classes, activation='sigmoid')(x)
     # Creating final model
     model = Model(inputs=base_model.input, outputs=predictions)
     return model
 
-
-def plot_training(history):
-    acc = history.history['acc']
-    val_acc = history.history['val_acc']
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-    epochs = range(len(acc))
-
-    plt.figure(1)
-    plt.plot(acc)
-    plt.plot(val_acc)
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'val'], loc='upper left')
-    plt.show()
-
-    # summarize history for loss
-    plt.figure(2)
-    plt.plot(loss)
-    plt.plot(val_loss)
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'val'], loc='upper left')
-    plt.show()
 
 
 def build_model(X_train, X_val, y_train, y_val):
