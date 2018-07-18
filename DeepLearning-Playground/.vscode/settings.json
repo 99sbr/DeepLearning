@@ -1,0 +1,12 @@
+{
+  "python.pythonPath": "/anaconda3",
+  "git.autofetch": true,
+  "editor.acceptSuggestionOnEnter": "off",
+  "editor.fontFamily": "monospace",
+  "editor.fontSize": 13,
+  "editor.tabSize": 2,
+  "editor.wordWrap": "off",
+  "editor.formatOnPaste": true,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.snippetSuggestions": "top"
+}

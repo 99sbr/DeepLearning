@@ -1,8 +1,8 @@
 'fine tune'
 from __future__ import print_function
 from __future__ import absolute_import
-import warnings
 
+import warnings
 warnings.filterwarnings('ignore')
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
@@ -34,14 +34,11 @@ def add_callback():
     return [checkpoint, learning_rate_reduction]
 
 
-
 def setup_to_transfer_learn(model, base_model):
   """Freeze all layers and compile the model"""
   for layer in base_model.layers:
     layer.trainable = False
     model.compile(loss='binary_crossentropy', optimizer=optimizers.Adam(), metrics=['accuracy'])
-
-
 
 
 def setup_to_finetune(model):
@@ -58,7 +55,13 @@ def setup_to_finetune(model):
 
 def add_new_last_layer(base_model, nb_classes):
     x = base_model.output
-    x = GlobalAveragePooling2D()(x)
+    x = Flatten()(x)
+    x = Dense(1024)(x)
+    x = Activation('relu')(x)
+    x = Dropout(0.2)(x)
+    x = Dense(512)(x)
+    x = Activation('selu')(x)
+  
     # using sigmoid for multi-label classification
     predictions = Dense(nb_classes, activation='sigmoid')(x)
     # Creating final model
@@ -66,11 +69,8 @@ def add_new_last_layer(base_model, nb_classes):
     return model
 
 
-
 def build_model(X_train, X_val, y_train, y_val):
-
     # Data Augmentation
-
     train_datagen = ImageDataGenerator(
         rescale=1. / 255,
         horizontal_flip=True,
@@ -79,7 +79,6 @@ def build_model(X_train, X_val, y_train, y_val):
         rotation_range=30,
         width_shift_range=0.2,
         height_shift_range=0.2
-
     )
 
     test_datagen = ImageDataGenerator(
@@ -98,8 +97,6 @@ def build_model(X_train, X_val, y_train, y_val):
     validation_generator = test_datagen.flow(
         X_val, y_val
     )
-
-
 
     base_model = applications.InceptionV3(weights="imagenet", include_top=False,
                                           input_shape=(IM_WIDTH, IM_HEIGHT, 3))
