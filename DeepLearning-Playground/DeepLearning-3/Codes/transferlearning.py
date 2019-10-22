@@ -13,9 +13,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import gc
-
 #
-
 weightsOutputFile = '../ModelCheckpoints/InceptionV2.{epoch:02d}-{val_acc:.3f}.hdf5'
 IM_WIDTH, IM_HEIGHT = 300 , 300
 EPOCH = 40

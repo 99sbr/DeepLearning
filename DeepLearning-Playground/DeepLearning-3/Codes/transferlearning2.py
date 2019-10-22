@@ -15,7 +15,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import gc
 
-#
 
 weightsOutputFile = '../ModelCheckpoints/InceptionV3.{epoch:02d}-{val_acc:.3f}.hdf5'
 IM_WIDTH, IM_HEIGHT = 250,250
@@ -42,7 +41,8 @@ def setup_to_transfer_learn(model, base_model):
 
 
 def setup_to_finetune(model):
-  """Freeze the bottom NB_IV3_LAYERS and retrain the remaining top layers.
+  """
+  Freeze the bottom NB_IV3_LAYERS and retrain the remaining top layers.
   note: NB_IV3_LAYERS corresponds to the top 2 inception blocks in the inceptionv3 arch
   Args:
     model: keras model

@@ -1,3 +1,7 @@
+*.txt
+*.hdf5
+*.h5
+*.iml
 *.csv
 *.jpg
 *.h5
@@ -7,6 +11,12 @@
 *.xml
 *.DS_Store
 *.iml
+*.log
+*.png
+*.pt
+*.tsv
+*.json
+
 
 /config
 /core.excludesFile
@@ -18,4 +28,9 @@ ModelCheckpoints/
 Preprocessing/
 Submission/
 DL3 Dataset/
+Model_Output/
+data/
+final/
+Graph/
+
 
