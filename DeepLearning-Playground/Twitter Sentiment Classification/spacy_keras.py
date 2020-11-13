@@ -16,7 +16,7 @@ class SentimentAnalyser(object):
     @classmethod
     def load(cls, path, nlp, max_length=100):
         with (path / 'config.json').open() as file_:
-            model = model_from_json(file_.read())
+        	model = model_from_json(file_.read())
         with (path / 'model').open('rb') as file_:
             lstm_weights = pickle.load(file_)
         embeddings = get_embeddings(nlp.vocab)

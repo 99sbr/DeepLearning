@@ -29,7 +29,7 @@ LABEL = data.LabelField(dtype=torch.float, batch_first=True)
 fields = [(None, None), ('label', LABEL), ('text', TEXT)]
 
 # loading custom train dataset
-training_data = data.TabularDataset(path=r'data/train_E6oV3lV.csv',
+training_data = data.TabularDataset(path=r'data/train.csv',
                                     format='csv',
                                     fields=fields,
                                     skip_header=True)
@@ -54,7 +54,7 @@ train_iterator, valid_iterator = data.BucketIterator.splits(
 
 
 # initialize glove embeddings
-TEXT.build_vocab(train_data, min_freq=3, vectors="glove.6B.300d")
+TEXT.build_vocab(train_data, min_freq=1, vectors="glove.6B.300d")
 LABEL.build_vocab(train_data)
 
 # No. of unique tokens in text
@@ -63,11 +63,7 @@ print("Size of TEXT vocabulary:", len(TEXT.vocab))
 # No. of unique tokens in label
 print("Size of LABEL vocabulary:", len(LABEL.vocab))
 
-# Commonly used words
-print(TEXT.vocab.freqs.most_common(10))
 
-# Word dictionary
-print(TEXT.vocab.stoi)
 
 PAD_IDX = TEXT.vocab.stoi[TEXT.pad_token]
 
@@ -301,7 +297,7 @@ def predict(model, sentence):
     return prediction.item()
 
 
-test = pd.read_csv(r'data/test_tweets_anuFYb8.csv')
+test = pd.read_csv(r'data/test.csv')
 
 prediction = []
 ids = []
